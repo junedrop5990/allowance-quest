@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#1a1f30"/>
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <defs>
+    <radialGradient id="bg" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#2a2a6e"/>
+      <stop offset="100%" stop-color="#0f1117"/>
+    </radialGradient>
+  </defs>
+  <!-- 剣 -->
+  <line x1="256" y1="80" x2="256" y2="380" stroke="#9fa8da" stroke-width="28" stroke-linecap="round"/>
+  <line x1="160" y1="220" x2="352" y2="220" stroke="#9fa8da" stroke-width="22" stroke-linecap="round"/>
+  <polygon points="256,60 240,100 256,90 272,100" fill="#ffd600"/>
+  <!-- 星 -->
+  <circle cx="380" cy="130" r="22" fill="#ffd600" opacity="0.9"/>
+  <circle cx="132" cy="390" r="16" fill="#7986cb" opacity="0.7"/>
+  <circle cx="400" cy="370" r="12" fill="#ef9a9a" opacity="0.6"/>
+</svg>
