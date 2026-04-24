@@ -17,43 +17,34 @@ if (typeof document !== "undefined") {
 // ─── 定数 ────────────────────────────────────────────────
 const STORAGE_KEY = "allowance_quest_v3";
 const WEEKDAYS = ["日","月","火","水","木","金","土"];
-const LEVEL_THRESHOLDS = [0, 200, 400, 600, 800];
+const LEVEL_THRESHOLDS = [0, 10, 50, 100, 200, 300];
 const CATEGORIES = ["せいかつ","べんきょう","おてつだい","特別"];
 
 const MONSTER_DEFS = [
-  { id:1,  name:"プニョン",   type:"ノーマル",   typeColor:"#7986cb", desc:"まるくてやわらかい。なでるとぷにぷにする。",           levels:["たまご","ちびプニョン","プニョン","プニョンガ","マスタープニョン"] },
-  { id:2,  name:"メラゴン",   type:"ほのお",     typeColor:"#ef5350", desc:"しっぽから炎が出る。いつも元気いっぱい！",             levels:["たまご","チビメラ","メラゴン","メラゴン改","ゴッドメラゴン"] },
-  { id:3,  name:"アクアリン", type:"みず",       typeColor:"#29b6f6", desc:"雨の日が大好き。体が透けて見えるほど澄んでいる。",     levels:["たまご","しずくちゃん","アクアリン","アクアリンS","オーシャンキング"] },
-  { id:4,  name:"ピリカ",     type:"でんき",     typeColor:"#ffd600", desc:"全身がぴかぴか光る。静電気でびりびり！",               levels:["たまご","ぴかちゃん","ピリカ","ピリカボルト","サンダーキング"] },
-  { id:5,  name:"ハナポン",   type:"くさ",       typeColor:"#66bb6a", desc:"頭に花が咲く。お日さまが大好き。",                     levels:["たまご","めばえ","ハナポン","ハナポンフル","フォレストクイーン"] },
-  { id:6,  name:"ユーレイン", type:"ゴースト",   typeColor:"#ab47bc", desc:"ふわふわ浮かぶ。実は寂しがり屋で友達が大好き。",       levels:["たまご","こゆうれい","ユーレイン","ユーレインX","ゴーストロード"] },
-  { id:7,  name:"ドラゴリン", type:"ドラゴン",   typeColor:"#ff7043", desc:"小さくても勇敢。いつか空を飛ぶのが夢。",               levels:["たまご","ちびドラゴ","ドラゴリン","ドラゴリン改","ドラゴキング"] },
-  { id:8,  name:"コオリン",   type:"こおり",     typeColor:"#80deea", desc:"雪が大好きな氷の生き物。ひんやり冷たい。",             levels:["たまご","ちびコオリ","コオリン","コオリンS","フリーズキング"] },
-  { id:9,  name:"ガントス",   type:"いわ",       typeColor:"#bcaaa4", desc:"固い体が自慢。でも意外と転がりやすい。",               levels:["たまご","こいし","ガントス","ガントスG","ロックロード"] },
-  { id:10, name:"カゼリン",   type:"ひこう",     typeColor:"#81d4fa", desc:"風に乗ってどこへでも飛べる。自由が大好き。",           levels:["たまご","ひなドリ","カゼリン","カゼリンX","スカイキング"] },
-  { id:11, name:"フェアリン", type:"フェアリー", typeColor:"#f48fb1", desc:"星のかけらで生まれた不思議な妖精。",                   levels:["たまご","ちびフェア","フェアリン","フェアリンS","フェアリクイーン"] },
-  { id:12, name:"ダークロン", type:"あく",       typeColor:"#78909c", desc:"暗い場所が好き。でも友達の前では笑ってる。",           levels:["たまご","かげっこ","ダークロン","ダークロンZ","シャドウロード"] },
-  { id:13, name:"サイコン",   type:"エスパー",   typeColor:"#ce93d8", desc:"宝石のような体に不思議な力が宿っている。",             levels:["たまご","こクリスタル","サイコン","サイコンX","マインドキング"] },
-  { id:14, name:"ムシポン",   type:"むし",       typeColor:"#aed581", desc:"たくさんの足でぴょこぴょこ歩く。葉っぱが好き。",       levels:["たまご","ちびムシ","ムシポン","ムシポンG","バグマスター"] },
-  { id:15, name:"キノポン",   type:"どく",       typeColor:"#ba68c8", desc:"大きなキノコのかさが目印。見た目より無害。",           levels:["たまご","こキノコ","キノポン","キノポンX","マッシュロード"] },
-  { id:16, name:"フワリン",   type:"ノーマル",   typeColor:"#bdbdbd", desc:"ふわふわの雲のような体。夢の中で会えるかも。",         levels:["たまご","こぐも","フワリン","フワリンS","クラウドキング"] },
-  { id:17, name:"テツゴン",   type:"はがね",     typeColor:"#90a4ae", desc:"鉄の体で何でも守る。実は泣き虫。",                     levels:["たまご","ちびロボ","テツゴン","テツゴンMk2","アイアンキング"] },
-  { id:18, name:"サンゴリン", type:"みず",       typeColor:"#f06292", desc:"海の底に住むサンゴの精。歌が得意。",                   levels:["たまご","こサンゴ","サンゴリン","サンゴリンX","オーシャンクイーン"] },
-  { id:19, name:"ヒカリン",   type:"ひかり",     typeColor:"#fdd835", desc:"星の形をした光の化身。夜になると輝く。",               levels:["たまご","こびかり","ヒカリン","ヒカリンS","スターキング"] },
-  { id:20, name:"ツチポン",   type:"じめん",     typeColor:"#ff8a65", desc:"大きなつめで土を掘るのが得意。わんぱく。",             levels:["たまご","こもぐら","ツチポン","ツチポンG","アースキング"] },
-  { id:21, name:"ナゾリン",   type:"なぞ",       typeColor:"#4db6ac", desc:"何者なのか誰も知らない。でもいつも楽しそう。",         levels:["たまご","こなぞ","ナゾリン","ナゾリンX","ミステリーロード"] },
+  { id:1,  name:"プニョン",   type:"ノーマル",   typeColor:"#7986cb", desc:"まるくてやわらかい。なでるとぷにぷにする。",           levels:["たまご","ちびプニョン","プニョン","プニョンガ","マスタープニョン","超マスタープニョン"] },
+  { id:2,  name:"メラゴン",   type:"ほのお",     typeColor:"#ef5350", desc:"しっぽから炎が出る。いつも元気いっぱい！",             levels:["たまご","チビメラ","メラゴン","メラゴン改","ゴッドメラゴン","超ゴッドメラゴン"] },
+  { id:3,  name:"アクアリン", type:"みず",       typeColor:"#29b6f6", desc:"雨の日が大好き。体が透けて見えるほど澄んでいる。",     levels:["たまご","しずくちゃん","アクアリン","アクアリンS","オーシャンキング","超オーシャンキング"] },
+  { id:4,  name:"ピリカ",     type:"でんき",     typeColor:"#ffd600", desc:"全身がぴかぴか光る。静電気でびりびり！",               levels:["たまご","ぴかちゃん","ピリカ","ピリカボルト","サンダーキング","超サンダーキング"] },
+  { id:5,  name:"ハナポン",   type:"くさ",       typeColor:"#66bb6a", desc:"頭に花が咲く。お日さまが大好き。",                     levels:["たまご","めばえ","ハナポン","ハナポンフル","フォレストクイーン","超フォレストクイーン"] },
+  { id:6,  name:"ユーレイン", type:"ゴースト",   typeColor:"#ab47bc", desc:"ふわふわ浮かぶ。実は寂しがり屋で友達が大好き。",       levels:["たまご","こゆうれい","ユーレイン","ユーレインX","ゴーストロード","超ゴーストロード"] },
+  { id:7,  name:"ドラゴリン", type:"ドラゴン",   typeColor:"#ff7043", desc:"小さくても勇敢。いつか空を飛ぶのが夢。",               levels:["たまご","ちびドラゴ","ドラゴリン","ドラゴリン改","ドラゴキング","超ドラゴキング"] },
+  { id:8,  name:"コオリン",   type:"こおり",     typeColor:"#80deea", desc:"雪が大好きな氷の生き物。ひんやり冷たい。",             levels:["たまご","ちびコオリ","コオリン","コオリンS","フリーズキング","超フリーズキング"] },
+  { id:9,  name:"ガントス",   type:"いわ",       typeColor:"#bcaaa4", desc:"固い体が自慢。でも意外と転がりやすい。",               levels:["たまご","こいし","ガントス","ガントスG","ロックロード","超ロックロード"] },
+  { id:10, name:"カゼリン",   type:"ひこう",     typeColor:"#81d4fa", desc:"風に乗ってどこへでも飛べる。自由が大好き。",           levels:["たまご","ひなドリ","カゼリン","カゼリンX","スカイキング","超スカイキング"] },
+  { id:11, name:"フェアリン", type:"フェアリー", typeColor:"#f48fb1", desc:"星のかけらで生まれた不思議な妖精。",                   levels:["たまご","ちびフェア","フェアリン","フェアリンS","フェアリクイーン","超フェアリクイーン"] },
+  { id:12, name:"ダークロン", type:"あく",       typeColor:"#78909c", desc:"暗い場所が好き。でも友達の前では笑ってる。",           levels:["たまご","かげっこ","ダークロン","ダークロンZ","シャドウロード","超シャドウロード"] },
+  { id:13, name:"サイコン",   type:"エスパー",   typeColor:"#ce93d8", desc:"宝石のような体に不思議な力が宿っている。",             levels:["たまご","こクリスタル","サイコン","サイコンX","マインドキング","超マインドキング"] },
+  { id:14, name:"ムシポン",   type:"むし",       typeColor:"#aed581", desc:"たくさんの足でぴょこぴょこ歩く。葉っぱが好き。",       levels:["たまご","ちびムシ","ムシポン","ムシポンG","バグマスター","超バグマスター"] },
+  { id:15, name:"キノポン",   type:"どく",       typeColor:"#ba68c8", desc:"大きなキノコのかさが目印。見た目より無害。",           levels:["たまご","こキノコ","キノポン","キノポンX","マッシュロード","超マッシュロード"] },
+  { id:16, name:"フワリン",   type:"ノーマル",   typeColor:"#bdbdbd", desc:"ふわふわの雲のような体。夢の中で会えるかも。",         levels:["たまご","こぐも","フワリン","フワリンS","クラウドキング","超クラウドキング"] },
+  { id:17, name:"テツゴン",   type:"はがね",     typeColor:"#90a4ae", desc:"鉄の体で何でも守る。実は泣き虫。",                     levels:["たまご","ちびロボ","テツゴン","テツゴンMk2","アイアンキング","超アイアンキング"] },
+  { id:18, name:"サンゴリン", type:"みず",       typeColor:"#f06292", desc:"海の底に住むサンゴの精。歌が得意。",                   levels:["たまご","こサンゴ","サンゴリン","サンゴリンX","オーシャンクイーン","超オーシャンクイーン"] },
+  { id:19, name:"ヒカリン",   type:"ひかり",     typeColor:"#fdd835", desc:"星の形をした光の化身。夜になると輝く。",               levels:["たまご","こびかり","ヒカリン","ヒカリンS","スターキング","超スターキング"] },
+  { id:20, name:"ツチポン",   type:"じめん",     typeColor:"#ff8a65", desc:"大きなつめで土を掘るのが得意。わんぱく。",             levels:["たまご","こもぐら","ツチポン","ツチポンG","アースキング","超アースキング"] },
+  { id:21, name:"ナゾリン",   type:"なぞ",       typeColor:"#4db6ac", desc:"何者なのか誰も知らない。でもいつも楽しそう。",         levels:["たまご","こなぞ","ナゾリン","ナゾリンX","ミステリーロード","超ミステリーロード"] },
 ];
 
-const DEFAULT_QUESTS = [
-  { id:1, name:"歯みがき",       points:1, icon:"🦷", category:"せいかつ", type:"daily" },
-  { id:2, name:"早起き（7時前）", points:2, icon:"🌅", category:"せいかつ", type:"daily" },
-  { id:3, name:"部屋の片づけ",   points:2, icon:"🧹", category:"おてつだい", type:"daily" },
-  { id:4, name:"宿題",           points:3, icon:"📚", category:"べんきょう", type:"daily" },
-  { id:5, name:"計算ドリル",     points:1, icon:"🔢", category:"べんきょう", type:"pages", pointsPerPage:1, maxPages:20 },
-  { id:6, name:"漢字ドリル",     points:1, icon:"✏️", category:"べんきょう", type:"pages", pointsPerPage:1, maxPages:10 },
-  { id:7, name:"お皿洗い",       points:3, icon:"🍽️", category:"おてつだい", type:"daily" },
-  { id:8, name:"お風呂洗い",     points:3, icon:"🛁", category:"おてつだい", type:"daily" },
-];
+const DEFAULT_QUESTS = [];
 
 // ─── ユーティリティ ───────────────────────────────────────
 const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
@@ -88,7 +79,7 @@ const migrateChild = (c) => {
   return c;
 };
 
-const initData = () => ({ quests: DEFAULT_QUESTS, nextQuestId: 9, children: [], nextChildId: 1, lastKnownMonth: thisMonth() });
+const initData = () => ({ quests: DEFAULT_QUESTS, nextQuestId: 1, children: [], nextChildId: 1, lastKnownMonth: thisMonth() });
 
 // ─── SVGモンスター共通ラッパー ────────────────────────────
 function MonsterSVG({ monsterId, level, size=160, animate=false }) {
