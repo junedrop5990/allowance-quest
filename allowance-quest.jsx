@@ -1032,7 +1032,7 @@ function MonsterView({child,freeExp,onAssign,onChangeMonster}){
         </div>
         <div style={S.levelList}>
           {LEVEL_THRESHOLDS.map((t,i)=>(
-            <div key={i} style={{...S.levelItem,...(i===level?S.levelItemActive:{}),(i<level?S.levelItemDone:{})}}>
+            <div key={i} style={{...S.levelItem,...(i===level?S.levelItemActive:{}),...(i<level?S.levelItemDone:{})}}>
               <span>Lv.{i+1}</span><span>{monster.levels[i]}</span><span style={{fontSize:11,opacity:0.6}}>{t}pt～</span>
             </div>
           ))}
