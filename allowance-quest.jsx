@@ -1414,10 +1414,10 @@ function Modal({children,onClose,title,footer}){return(
         <h3 style={{fontSize:17,fontWeight:800,color:"#f0f0f0"}}>{title}</h3>
         <button style={S.modalClose} onClick={onClose}>✕</button>
       </div>
-      <div style={{overflowY:"auto",flex:1,display:"flex",flexDirection:"column",gap:10}}>
+      <div style={{overflowY:"auto",flex:1,display:"flex",flexDirection:"column",gap:10,paddingBottom:8}}>
         {children}
       </div>
-      {footer&&<div style={{paddingTop:8,borderTop:"1px solid #2a3660",flexShrink:0}}>{footer}</div>}
+      {footer&&<div style={{padding:"10px 0 calc(70px + env(safe-area-inset-bottom))",borderTop:"1px solid #2a3660",flexShrink:0,background:"#1a1f30"}}>{footer}</div>}
     </div>
   </div>
 );}
@@ -1845,14 +1845,14 @@ const S = {
     background:"rgba(0,0,0,0.75)",
     display:"flex",alignItems:"flex-end",justifyContent:"center",
     zIndex:1000,animation:"fadeIn 0.15s ease",
-    paddingBottom:"calc(65px + env(safe-area-inset-bottom))",
+    paddingBottom:"env(safe-area-inset-bottom)",
   },
   modalContent:{
     background:"#1a1f30",borderRadius:"20px 20px 0 0",
-    padding:"20px max(16px,env(safe-area-inset-left))",
+    padding:"16px max(16px,env(safe-area-inset-left)) 0",
     width:"100%",maxWidth:520,
-    maxHeight:"80vh",overflowY:"hidden",
-    display:"flex",flexDirection:"column",gap:10,
+    maxHeight:"calc(100vh - 80px)",overflowY:"hidden",
+    display:"flex",flexDirection:"column",gap:8,
     animation:"popIn 0.25s cubic-bezier(.34,1.56,.64,1)",
   },
   modalClose:{
