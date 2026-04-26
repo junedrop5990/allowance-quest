@@ -1845,7 +1845,7 @@ const S = {
     background:"rgba(0,0,0,0.75)",
     display:"flex",alignItems:"flex-end",justifyContent:"center",
     zIndex:1000,animation:"fadeIn 0.15s ease",
-    paddingBottom:"env(safe-area-inset-bottom)",
+    paddingBottom:"calc(65px + env(safe-area-inset-bottom))",
   },
   modalContent:{
     background:"#1a1f30",borderRadius:"20px 20px 0 0",
