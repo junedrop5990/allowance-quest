@@ -17,31 +17,31 @@ if (typeof document !== "undefined") {
 // ─── 定数 ────────────────────────────────────────────────
 const STORAGE_KEY = "allowance_quest_v3";
 const WEEKDAYS = ["日","月","火","水","木","金","土"];
-const LEVEL_THRESHOLDS = [0, 10, 50, 100, 200, 300];
+const LEVEL_THRESHOLDS = [0, 10, 50, 100, 200];
 const CATEGORIES = ["せいかつ","べんきょう","おてつだい","特別"];
 
 const MONSTER_DEFS = [
-  { id:1,  name:"プニョン",   type:"ノーマル",   typeColor:"#7986cb", desc:"まるくてやわらかい。なでるとぷにぷにする。",           levels:["たまご","ちびプニョン","プニョン","プニョンガ","マスタープニョン","超マスタープニョン"] },
-  { id:2,  name:"メラゴン",   type:"ほのお",     typeColor:"#ef5350", desc:"しっぽから炎が出る。いつも元気いっぱい！",             levels:["たまご","チビメラ","メラゴン","メラゴン改","ゴッドメラゴン","超ゴッドメラゴン"] },
-  { id:3,  name:"アクアリン", type:"みず",       typeColor:"#29b6f6", desc:"雨の日が大好き。体が透けて見えるほど澄んでいる。",     levels:["たまご","しずくちゃん","アクアリン","アクアリンS","オーシャンキング","超オーシャンキング"] },
-  { id:4,  name:"ピリカ",     type:"でんき",     typeColor:"#ffd600", desc:"全身がぴかぴか光る。静電気でびりびり！",               levels:["たまご","ぴかちゃん","ピリカ","ピリカボルト","サンダーキング","超サンダーキング"] },
-  { id:5,  name:"ハナポン",   type:"くさ",       typeColor:"#66bb6a", desc:"頭に花が咲く。お日さまが大好き。",                     levels:["たまご","めばえ","ハナポン","ハナポンフル","フォレストクイーン","超フォレストクイーン"] },
-  { id:6,  name:"ユーレイン", type:"ゴースト",   typeColor:"#ab47bc", desc:"ふわふわ浮かぶ。実は寂しがり屋で友達が大好き。",       levels:["たまご","こゆうれい","ユーレイン","ユーレインX","ゴーストロード","超ゴーストロード"] },
-  { id:7,  name:"ドラゴリン", type:"ドラゴン",   typeColor:"#ff7043", desc:"小さくても勇敢。いつか空を飛ぶのが夢。",               levels:["たまご","ちびドラゴ","ドラゴリン","ドラゴリン改","ドラゴキング","超ドラゴキング"] },
-  { id:8,  name:"コオリン",   type:"こおり",     typeColor:"#80deea", desc:"雪が大好きな氷の生き物。ひんやり冷たい。",             levels:["たまご","ちびコオリ","コオリン","コオリンS","フリーズキング","超フリーズキング"] },
-  { id:9,  name:"ガントス",   type:"いわ",       typeColor:"#bcaaa4", desc:"固い体が自慢。でも意外と転がりやすい。",               levels:["たまご","こいし","ガントス","ガントスG","ロックロード","超ロックロード"] },
-  { id:10, name:"カゼリン",   type:"ひこう",     typeColor:"#81d4fa", desc:"風に乗ってどこへでも飛べる。自由が大好き。",           levels:["たまご","ひなドリ","カゼリン","カゼリンX","スカイキング","超スカイキング"] },
-  { id:11, name:"フェアリン", type:"フェアリー", typeColor:"#f48fb1", desc:"星のかけらで生まれた不思議な妖精。",                   levels:["たまご","ちびフェア","フェアリン","フェアリンS","フェアリクイーン","超フェアリクイーン"] },
-  { id:12, name:"ダークロン", type:"あく",       typeColor:"#78909c", desc:"暗い場所が好き。でも友達の前では笑ってる。",           levels:["たまご","かげっこ","ダークロン","ダークロンZ","シャドウロード","超シャドウロード"] },
-  { id:13, name:"サイコン",   type:"エスパー",   typeColor:"#ce93d8", desc:"宝石のような体に不思議な力が宿っている。",             levels:["たまご","こクリスタル","サイコン","サイコンX","マインドキング","超マインドキング"] },
-  { id:14, name:"ムシポン",   type:"むし",       typeColor:"#aed581", desc:"たくさんの足でぴょこぴょこ歩く。葉っぱが好き。",       levels:["たまご","ちびムシ","ムシポン","ムシポンG","バグマスター","超バグマスター"] },
-  { id:15, name:"キノポン",   type:"どく",       typeColor:"#ba68c8", desc:"大きなキノコのかさが目印。見た目より無害。",           levels:["たまご","こキノコ","キノポン","キノポンX","マッシュロード","超マッシュロード"] },
-  { id:16, name:"フワリン",   type:"ノーマル",   typeColor:"#bdbdbd", desc:"ふわふわの雲のような体。夢の中で会えるかも。",         levels:["たまご","こぐも","フワリン","フワリンS","クラウドキング","超クラウドキング"] },
-  { id:17, name:"テツゴン",   type:"はがね",     typeColor:"#90a4ae", desc:"鉄の体で何でも守る。実は泣き虫。",                     levels:["たまご","ちびロボ","テツゴン","テツゴンMk2","アイアンキング","超アイアンキング"] },
-  { id:18, name:"サンゴリン", type:"みず",       typeColor:"#f06292", desc:"海の底に住むサンゴの精。歌が得意。",                   levels:["たまご","こサンゴ","サンゴリン","サンゴリンX","オーシャンクイーン","超オーシャンクイーン"] },
-  { id:19, name:"ヒカリン",   type:"ひかり",     typeColor:"#fdd835", desc:"星の形をした光の化身。夜になると輝く。",               levels:["たまご","こびかり","ヒカリン","ヒカリンS","スターキング","超スターキング"] },
-  { id:20, name:"ツチポン",   type:"じめん",     typeColor:"#ff8a65", desc:"大きなつめで土を掘るのが得意。わんぱく。",             levels:["たまご","こもぐら","ツチポン","ツチポンG","アースキング","超アースキング"] },
-  { id:21, name:"ナゾリン",   type:"なぞ",       typeColor:"#4db6ac", desc:"何者なのか誰も知らない。でもいつも楽しそう。",         levels:["たまご","こなぞ","ナゾリン","ナゾリンX","ミステリーロード","超ミステリーロード"] },
+  { id:1,  name:"プニョン",   type:"ノーマル",   typeColor:"#7986cb", desc:"まるくてやわらかい。なでるとぷにぷにする。",           levels:["たまご","ちびプニョン","プニョン","プニョンガ","マスタープニョン"] },
+  { id:2,  name:"メラゴン",   type:"ほのお",     typeColor:"#ef5350", desc:"しっぽから炎が出る。いつも元気いっぱい！",             levels:["たまご","チビメラ","メラゴン","メラゴン改","ゴッドメラゴン"] },
+  { id:3,  name:"アクアリン", type:"みず",       typeColor:"#29b6f6", desc:"雨の日が大好き。体が透けて見えるほど澄んでいる。",     levels:["たまご","しずくちゃん","アクアリン","アクアリンS","オーシャンキング"] },
+  { id:4,  name:"ピリカ",     type:"でんき",     typeColor:"#ffd600", desc:"全身がぴかぴか光る。静電気でびりびり！",               levels:["たまご","ぴかちゃん","ピリカ","ピリカボルト","サンダーキング"] },
+  { id:5,  name:"ハナポン",   type:"くさ",       typeColor:"#66bb6a", desc:"頭に花が咲く。お日さまが大好き。",                     levels:["たまご","めばえ","ハナポン","ハナポンフル","フォレストクイーン"] },
+  { id:6,  name:"ユーレイン", type:"ゴースト",   typeColor:"#ab47bc", desc:"ふわふわ浮かぶ。実は寂しがり屋で友達が大好き。",       levels:["たまご","こゆうれい","ユーレイン","ユーレインX","ゴーストロード"] },
+  { id:7,  name:"ドラゴリン", type:"ドラゴン",   typeColor:"#ff7043", desc:"小さくても勇敢。いつか空を飛ぶのが夢。",               levels:["たまご","ちびドラゴ","ドラゴリン","ドラゴリン改","ドラゴキング"] },
+  { id:8,  name:"コオリン",   type:"こおり",     typeColor:"#80deea", desc:"雪が大好きな氷の生き物。ひんやり冷たい。",             levels:["たまご","ちびコオリ","コオリン","コオリンS","フリーズキング"] },
+  { id:9,  name:"ガントス",   type:"いわ",       typeColor:"#bcaaa4", desc:"固い体が自慢。でも意外と転がりやすい。",               levels:["たまご","こいし","ガントス","ガントスG","ロックロード"] },
+  { id:10, name:"カゼリン",   type:"ひこう",     typeColor:"#81d4fa", desc:"風に乗ってどこへでも飛べる。自由が大好き。",           levels:["たまご","ひなドリ","カゼリン","カゼリンX","スカイキング"] },
+  { id:11, name:"フェアリン", type:"フェアリー", typeColor:"#f48fb1", desc:"星のかけらで生まれた不思議な妖精。",                   levels:["たまご","ちびフェア","フェアリン","フェアリンS","フェアリクイーン"] },
+  { id:12, name:"ダークロン", type:"あく",       typeColor:"#78909c", desc:"暗い場所が好き。でも友達の前では笑ってる。",           levels:["たまご","かげっこ","ダークロン","ダークロンZ","シャドウロード"] },
+  { id:13, name:"サイコン",   type:"エスパー",   typeColor:"#ce93d8", desc:"宝石のような体に不思議な力が宿っている。",             levels:["たまご","こクリスタル","サイコン","サイコンX","マインドキング"] },
+  { id:14, name:"ムシポン",   type:"むし",       typeColor:"#aed581", desc:"たくさんの足でぴょこぴょこ歩く。葉っぱが好き。",       levels:["たまご","ちびムシ","ムシポン","ムシポンG","バグマスター"] },
+  { id:15, name:"キノポン",   type:"どく",       typeColor:"#ba68c8", desc:"大きなキノコのかさが目印。見た目より無害。",           levels:["たまご","こキノコ","キノポン","キノポンX","マッシュロード"] },
+  { id:16, name:"フワリン",   type:"ノーマル",   typeColor:"#bdbdbd", desc:"ふわふわの雲のような体。夢の中で会えるかも。",         levels:["たまご","こぐも","フワリン","フワリンS","クラウドキング"] },
+  { id:17, name:"テツゴン",   type:"はがね",     typeColor:"#90a4ae", desc:"鉄の体で何でも守る。実は泣き虫。",                     levels:["たまご","ちびロボ","テツゴン","テツゴンMk2","アイアンキング"] },
+  { id:18, name:"サンゴリン", type:"みず",       typeColor:"#f06292", desc:"海の底に住むサンゴの精。歌が得意。",                   levels:["たまご","こサンゴ","サンゴリン","サンゴリンX","オーシャンクイーン"] },
+  { id:19, name:"ヒカリン",   type:"ひかり",     typeColor:"#fdd835", desc:"星の形をした光の化身。夜になると輝く。",               levels:["たまご","こびかり","ヒカリン","ヒカリンS","スターキング"] },
+  { id:20, name:"ツチポン",   type:"じめん",     typeColor:"#ff8a65", desc:"大きなつめで土を掘るのが得意。わんぱく。",             levels:["たまご","こもぐら","ツチポン","ツチポンG","アースキング"] },
+  { id:21, name:"ナゾリン",   type:"なぞ",       typeColor:"#4db6ac", desc:"何者なのか誰も知らない。でもいつも楽しそう。",         levels:["たまご","こなぞ","ナゾリン","ナゾリンX","ミステリーロード"] },
 ];
 
 const DEFAULT_QUESTS = [];
@@ -540,7 +540,6 @@ export default function App() {
   const [monthEndData, setMonthEndData] = useState(null);
   const [showEvolution, setShowEvolution] = useState(false);
   const [evolutionInfo, setEvolutionInfo] = useState(null);
-  const [showSpecialQuest, setShowSpecialQuest] = useState(false);
   const [toast, setToast] = useState(null);
   const [pageInputs, setPageInputs] = useState({});
   const [showParentPin, setShowParentPin] = useState(false);
@@ -735,11 +734,6 @@ export default function App() {
     showToast(`📖 ${quest.name} ${pages}p → +${pts}pt！`);
   };
 
-  const grantSpecial = (name, pts) => {
-    recordMonthlyLog(`special_${Date.now()}`, pts);
-    setShowSpecialQuest(false);
-    showToast(`🌟 ${name} +${pts}pt！`);
-  };
 
   // ─── 経験値配布 ───────────────────────────────────────
   const assignExp = (amount) => {
@@ -848,7 +842,6 @@ export default function App() {
             todayClears={getTodayClears()} onceClears={getOnceClears()}
             getTodayPages={getTodayPages} pageInputs={pageInputs} setPageInputs={setPageInputs}
             onClear={clearDailyQuest} onClearPages={clearPagesQuest}
-            onSpecial={()=>setShowSpecialQuest(true)}
             onMonthEnd={()=>triggerMonthEnd(thisMonth())}/>
         )}
         {activeTab==="monster" && child && (
@@ -858,7 +851,7 @@ export default function App() {
         {activeTab==="encyclopedia" && (
           <EncyclopediaView children={data.children}/>
         )}
-        {activeTab==="records" && child && <RecordsView child={child}/>}
+        {activeTab==="records" && child && <RecordsView child={child} quests={data.quests}/>}
         {activeTab==="settings" && (
           <SettingsView data={data} setData={setData}
             parentUnlocked={parentUnlocked} onUnlock={()=>setShowParentPin(true)}
@@ -887,7 +880,6 @@ export default function App() {
 
       {/* モーダル */}
       {showAddChild && <AddChildModal onAdd={addChild} onClose={()=>setShowAddChild(false)}/>}
-      {showSpecialQuest && <SpecialQuestModal onGrant={grantSpecial} onClose={()=>setShowSpecialQuest(false)}/>}
       {showMonthEnd && monthEndData && <MonthEndModal data={monthEndData} child={child} onClose={()=>setShowMonthEnd(false)}/>}
       {showEvolution && evolutionInfo && <EvolutionModal info={evolutionInfo} onClose={()=>setShowEvolution(false)}/>}
       {showParentPin && <PinModal onSuccess={()=>{setParentUnlocked(true);setShowParentPin(false);}} onClose={()=>setShowParentPin(false)}/>}
@@ -914,7 +906,7 @@ export default function App() {
 // ════════════════════════════════════════════════════════════
 // クエスト画面
 // ════════════════════════════════════════════════════════════
-function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs,setPageInputs,onClear,onClearPages,onSpecial,onMonthEnd}){
+function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs,setPageInputs,onClear,onClearPages,onMonthEnd}){
   const cats=[...new Set(quests.map(q=>q.category))];
   return(
     <div style={S.scrollArea} className="scroll-area">
@@ -930,7 +922,6 @@ function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs
         </div>
       ))}
       <div style={{padding:"8px 0 16px",display:"flex",flexDirection:"column",gap:8}}>
-        <button style={S.specialBtn} onClick={onSpecial}>🌟 特別クエストを追加</button>
         <button style={{...S.specialBtn,background:"#37474f"}} onClick={onMonthEnd}>📅 月次集計を確認</button>
       </div>
     </div>
@@ -969,7 +960,7 @@ function QuestCard({quest,todayClears,onceClears,getTodayPages,pageInput,setPage
         <div style={{...S.questName,textDecoration:onceDone?"line-through":"none",opacity:onceDone?0.55:1}}>{quest.name}</div>
         <div style={S.questMeta}>
           <span style={S.questPts}>+{quest.points}pt</span>
-          <span style={{fontSize:11,color:"#e57373",fontWeight:700}}>一度切り</span>
+          <span style={{fontSize:11,color:"#e57373",fontWeight:700}}>特別</span>
         </div>
       </div>
       <div style={{...S.questCheck,...(onceDone?S.questCheckDone:{})}}>{onceDone?"✓":""}</div>
@@ -1107,15 +1098,27 @@ function EncyclopediaView({children}){
 // ════════════════════════════════════════════════════════════
 // 記録
 // ════════════════════════════════════════════════════════════
-function RecordsView({child}){
+function RecordsView({child,quests}){
   const logs=child.monthlyLog||{};
   const months=Object.keys(logs).sort().reverse();
+
+  const getQuestCounts=(monthLog)=>{
+    const counts={};
+    Object.keys(monthLog).forEach(key=>{
+      const qid=key.split("_")[0];
+      if(qid==="special") return;
+      counts[qid]=(counts[qid]||0)+1;
+    });
+    return counts;
+  };
+
   return(
     <div style={S.scrollArea} className="scroll-area">
       <h3 style={S.sectionTitle}>ポイント記録</h3>
       {months.length===0&&<p style={{color:"#888",padding:16}}>まだ記録がありません</p>}
       {months.map(m=>{
         const total=Object.values(logs[m]).reduce((a,b)=>a+b,0);
+        const counts=getQuestCounts(logs[m]);
         return(
           <div key={m} style={S.recordCard}>
             <div style={S.recordMonth}>{m.replace("-","年")}月</div>
@@ -1123,6 +1126,20 @@ function RecordsView({child}){
               <div style={S.recordStat}><span style={S.recordNum}>{total}</span><span style={S.recordLbl}>pt</span></div>
               <div style={S.recordStat}><span style={S.recordNum}>{total*(child.pointRate||10)}</span><span style={S.recordLbl}>円</span></div>
             </div>
+            {Object.keys(counts).length>0&&(
+              <div style={{marginTop:8,borderTop:"1px solid #2a3660",paddingTop:8,display:"flex",flexDirection:"column",gap:4}}>
+                {Object.entries(counts).map(([qid,cnt])=>{
+                  const q=quests.find(x=>String(x.id)===qid);
+                  const label=q?`${q.icon} ${q.name}`:`クエスト#${qid}`;
+                  return(
+                    <div key={qid} style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:13,color:"#ccc"}}>
+                      <span>{label}</span>
+                      <span style={{color:"#7986cb",fontWeight:700}}>{cnt}回</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}
@@ -1142,6 +1159,7 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
   const [type,setType]=useState("daily");
   const [ppp,setPpp]=useState("1");
   const [editQ,setEditQ]=useState(null);
+  const [resetStep,setResetStep]=useState(0);
 
   if(!parentUnlocked) return(
     <div style={S.lockScreen}>
@@ -1194,7 +1212,7 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
         <div style={S.settingRow}>
           <select value={cat} onChange={e=>setCat(e.target.value)} style={S.settingSelect}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select>
           <select value={type} onChange={e=>setType(e.target.value)} style={S.settingSelect}>
-            <option value="daily">毎日</option><option value="pages">ページ数</option><option value="once">一度切り</option>
+            <option value="daily">毎日</option><option value="pages">ページ数</option><option value="once">特別</option>
           </select>
         </div>
         <div style={S.settingRow}>
@@ -1216,13 +1234,33 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
             <button style={S.sqInfo} onClick={()=>setEditQ({...q})}>
               <span style={{fontSize:18}}>{q.icon}</span>
               <span style={{flex:1,color:"#eee",fontSize:13,textAlign:"left"}}>{q.name}</span>
-              <span style={{color:"#7986cb",fontSize:11}}>{q.type==="pages"?`${q.pointsPerPage}pt/p`:q.type==="once"?`${q.points}pt 一度`:`${q.points}pt`}</span>
+              <span style={{color:"#7986cb",fontSize:11}}>{q.type==="pages"?`${q.pointsPerPage}pt/p`:q.type==="once"?`${q.points}pt 特別`:`${q.points}pt`}</span>
             </button>
             <button style={S.deleteBtn} onClick={()=>delQ(q.id)}>✕</button>
           </div>
         ))}
       </div>
       {editQ&&<EditQuestModal quest={editQ} onSave={saveQ} onClose={()=>setEditQ(null)}/>}
+      <div style={S.settingSection}>
+        <h4 style={{...S.settingH,color:"#ef9a9a"}}>⚠️ データリセット</h4>
+        {resetStep===0&&(
+          <button style={{...S.addBtn,background:"#b71c1c",marginTop:4}} onClick={()=>setResetStep(1)}>
+            データをリセットする
+          </button>
+        )}
+        {resetStep===1&&(
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <p style={{color:"#ef9a9a",fontSize:13,margin:0}}>本当にリセットしますか？すべてのデータが消えます。</p>
+            <div style={{display:"flex",gap:8}}>
+              <button style={{...S.addBtn,background:"#b71c1c",flex:1}} onClick={()=>{
+                localStorage.clear();
+                window.location.reload();
+              }}>はい、リセットする</button>
+              <button style={{...S.addBtn,background:"#37474f",flex:1}} onClick={()=>setResetStep(0)}>キャンセル</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1390,20 +1428,6 @@ function ChangeMonsterModal({current,monsterExp,onSelect,onClose}){return(
   </Modal>
 );}
 
-function SpecialQuestModal({onGrant,onClose}){
-  const PRESETS=[{name:"テスト満点！",pts:20,icon:"💯"},{name:"大そうじ",pts:10,icon:"🧹"},{name:"お使い成功",pts:8,icon:"🛍️"},{name:"やさしくできた",pts:5,icon:"💗"}];
-  const [name,setName]=useState("");
-  const [pts,setPts]=useState("5");
-  return(<Modal onClose={onClose} title="🌟 特別クエスト">
-    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
-      {PRESETS.map(p=><button key={p.name} style={S.presetBtn} onClick={()=>onGrant(p.name,p.pts)}>{p.icon} {p.name} <span style={{color:"#ffd600"}}>+{p.pts}pt</span></button>)}
-    </div>
-    <p style={{color:"#aaa",fontSize:13,marginBottom:8}}>オリジナル：</p>
-    <input value={name} onChange={e=>setName(e.target.value)} placeholder="クエスト名" style={S.modalInput}/>
-    <input type="number" value={pts} onChange={e=>setPts(e.target.value)} style={S.modalInput}/>
-    <button style={S.modalConfirm} onClick={()=>name&&onGrant(name,Number(pts))}>付与する</button>
-  </Modal>);}
-
 function MonthEndModal({data,child,onClose}){
   const {month,pts,yen}=data;
   const monster=MONSTER_DEFS.find(m=>m.id===child?.activeMonster)||MONSTER_DEFS[0];
@@ -1441,7 +1465,7 @@ function EditQuestModal({quest,onSave,onClose}){
     <div style={{display:"flex",gap:8}}>
       <select value={q.category} onChange={e=>upd("category",e.target.value)} style={S.settingSelect}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select>
       <select value={q.type} onChange={e=>upd("type",e.target.value)} style={S.settingSelect}>
-        <option value="daily">毎日</option><option value="pages">ページ数</option><option value="once">一度切り</option>
+        <option value="daily">毎日</option><option value="pages">ページ数</option><option value="once">特別</option>
       </select>
     </div>
     {q.type==="pages"
