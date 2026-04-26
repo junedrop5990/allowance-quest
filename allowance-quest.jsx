@@ -1292,7 +1292,10 @@ function WelcomeScreen({onAdd}){
           <input type="number" inputMode="numeric" value={rate} onChange={e=>setRate(e.target.value)} style={{...S.welcomeInput,width:80,textAlign:"center",marginBottom:0}}/>
           <span style={{color:"#ccc"}}>円</span>
         </div>
-        <button style={S.startBtn} onClick={()=>name.trim()&&onAdd(name.trim(),mid,Number(rate)||10)}>はじめる！</button>
+        <button style={{...S.startBtn,...(!name.trim()?{background:"#37474f",cursor:"not-allowed",opacity:0.6}:{})}}
+          onClick={()=>name.trim()&&onAdd(name.trim(),mid,Number(rate)||10)}>
+          {name.trim()?"はじめる！":"名前を入力してください"}
+        </button>
       </div>
     </div>
   );
@@ -1769,9 +1772,10 @@ const S = {
 
   // ── ウェルカム画面 ────────────────────────────────────
   welcomeScreen:{
-    display:"flex",alignItems:"center",justifyContent:"center",
+    display:"flex",alignItems:"flex-start",justifyContent:"center",
     minHeight:"100dvh",background:"#0f1117",
-    padding:"20px max(16px,env(safe-area-inset-left))",
+    padding:"20px max(16px,env(safe-area-inset-left)) 40px",
+    overflowY:"auto",
   },
   welcomeCard:{
     background:"#1a1f30",border:"1px solid #2a2a5a",
