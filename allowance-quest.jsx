@@ -552,10 +552,12 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | offline
   const lastSyncedRef = useRef(null);
   const syncTimerRef = useRef(null);
+  const initialSyncDoneRef = useRef(false);
 
   // Firestoreリアルタイム受信
   useEffect(() => {
     if (!familyCode) return;
+    initialSyncDoneRef.current = false;
     setSyncStatus("syncing");
     const ref = doc(db, "families", familyCode);
     const unsub = onSnapshot(ref,
@@ -570,9 +572,10 @@ export default function App() {
             saveData(migrated);
           }
         }
+        initialSyncDoneRef.current = true;
         setSyncStatus("synced");
       },
-      () => setSyncStatus("offline")
+      () => { initialSyncDoneRef.current = true; setSyncStatus("offline"); }
     );
     return unsub;
   }, [familyCode]);
@@ -580,6 +583,7 @@ export default function App() {
   // Firestoreへの書き込み（500msデバウンス）
   useEffect(() => {
     if (!familyCode) return;
+    if (!initialSyncDoneRef.current) return;
     const dataStr = JSON.stringify(data);
     if (dataStr === lastSyncedRef.current) return;
     clearTimeout(syncTimerRef.current);
