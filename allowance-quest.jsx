@@ -753,9 +753,21 @@ export default function App() {
   const clearPagesQuest = (quest, pages) => {
     if (!pages || pages<=0) return;
     const pts = pages * (quest.pointsPerPage||1);
-    recordMonthlyLog(`${quest.id}_pages_${todayStr()}`, pts);
+    const key = `${quest.id}_pages_${todayStr()}`;
+    const m = thisMonth();
+    setData(prev => {
+      const updated = {...prev};
+      const c = {...updated.children[activeChildIdx]};
+      c.monthlyLog = {...c.monthlyLog};
+      const oldPts = (c.monthlyLog[m]||{})[key] || 0;
+      c.monthlyLog[m] = {...(c.monthlyLog[m]||{}), [key]: pts};
+      c.totalPoints = (c.totalPoints||0) - oldPts + pts;
+      updated.children = [...updated.children];
+      updated.children[activeChildIdx] = c;
+      return updated;
+    });
     setPageInputs(p=>({...p,[quest.id]:""}));
-    showToast(`📖 ${quest.name} ${pages}p → +${pts}pt！`);
+    showToast(`📖 ${quest.name} ${pages}p → ${pts}pt！`);
   };
 
 
@@ -1189,6 +1201,7 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
   const [ppp,setPpp]=useState("1");
   const [editQ,setEditQ]=useState(null);
   const [resetStep,setResetStep]=useState(0);
+  const [adjustPt,setAdjustPt]=useState("");
 
   if(!parentUnlocked) return(
     <div style={S.lockScreen}>
@@ -1199,6 +1212,13 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
   );
 
   const updRate=v=>{ if(!child)return; setData(p=>{const u={...p};u.children=[...u.children];u.children[activeChildIdx]={...u.children[activeChildIdx],pointRate:Number(v)};return u;}); };
+  const doAdjustPt=()=>{
+    const n=Number(adjustPt);
+    if(!child||isNaN(n)||n===0)return;
+    setData(p=>{const u={...p};u.children=[...u.children];u.children[activeChildIdx]={...u.children[activeChildIdx],totalPoints:Math.max(0,(u.children[activeChildIdx].totalPoints||0)+n)};return u;});
+    showToast(n>0?`+${n}pt 調整しました`:`${n}pt 調整しました`);
+    setAdjustPt("");
+  };
   const addQ=()=>{
     if(!name.trim())return;
     const q={id:data.nextQuestId,name:name.trim(),points:Number(pts),icon:icon||"⭐",category:cat,type,
@@ -1233,6 +1253,14 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
           <div style={S.settingRow}><span style={{color:"#ccc"}}>1pt =</span>
             <input type="number" value={child.pointRate||10} min="1" onChange={e=>updRate(e.target.value)} style={{...S.settingInput,width:80}}/>
             <span style={{color:"#ccc"}}>円</span></div>
+          <div style={S.settingRow}>
+            <span style={{color:"#ccc",fontSize:13}}>pt調整</span>
+            <input type="number" value={adjustPt} onChange={e=>setAdjustPt(e.target.value)}
+              placeholder="例: -80" style={{...S.settingInput,width:100}}/>
+            <span style={{color:"#ccc",fontSize:13}}>pt</span>
+            <button style={{...S.addBtn,marginTop:0,padding:"8px 14px"}} onClick={doAdjustPt}>適用</button>
+          </div>
+          <p style={{fontSize:11,color:"#888"}}>マイナス値で減算できます</p>
         </div>
       )}
       <div style={S.settingSection}>
