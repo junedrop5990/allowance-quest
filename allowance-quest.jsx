@@ -57,7 +57,7 @@ const getNextThreshold = (exp) => { for(const t of LEVEL_THRESHOLDS) if(exp<t) r
 const getFreeExp = (child) => {
   if (!child) return 0;
   const assigned = Object.values(child.monsterExp || {}).reduce((a,b)=>a+b,0);
-  return Math.max(0, (child.totalPoints||0) - assigned);
+  return Math.max(0, (child.totalExp||0) - assigned);
 };
 
 const loadData = () => { try { const r=localStorage.getItem(STORAGE_KEY); return r?JSON.parse(r):null; } catch { return null; } };
@@ -67,6 +67,8 @@ const migrateChild = (c) => {
   // 旧形式からの移行
   if (!c.activeMonster) c.activeMonster = c.monsterId || 1;
   if (!c.monsterExp) c.monsterExp = { [c.activeMonster]: c.totalPoints || 0 };
+  if (c.totalExp === undefined) c.totalExp = c.totalPoints || 0;
+  if (!c.monthlyExpLog) c.monthlyExpLog = {};
   // onceClears: flat→month-keyed
   if (c.onceClears) {
     const firstVal = Object.values(c.onceClears)[0];
@@ -635,8 +637,11 @@ export default function App() {
     if (!child) return {};
     const d = todayStr();
     const log = child.monthlyLog?.[thisMonth()] || {};
+    const expLog = child.monthlyExpLog?.[thisMonth()] || {};
     const res = {};
-    Object.keys(log).forEach(k => { if(k.endsWith(`_${d}`)) res[k.split("_")[0]] = log[k]; });
+    [...Object.keys(log), ...Object.keys(expLog)].forEach(k => {
+      if(k.endsWith(`_${d}`)) res[k.split("_")[0]] = true;
+    });
     return res;
   };
 
@@ -670,14 +675,15 @@ export default function App() {
     showToast(`${label} +${pts}pt！`);
   };
 
-  const recordMonthlyLog = (key, pts) => {
+  const recordMonthlyLog = (key, pts, exp=0) => {
     const m = thisMonth();
     setData(prev => {
       const updated = {...prev};
       const c = {...updated.children[activeChildIdx]};
       c.monthlyLog = {...c.monthlyLog};
-      c.monthlyLog[m] = {...(c.monthlyLog[m]||{}), [key]: pts};
+      c.monthlyLog[m] = {...(c.monthlyLog[m]||{}), [key]: pts, [key+'_exp']: exp};
       c.totalPoints = (c.totalPoints||0) + pts;
+      c.totalExp = (c.totalExp||0) + exp;
       updated.children = [...updated.children];
       updated.children[activeChildIdx] = c;
       return updated;
@@ -691,8 +697,12 @@ export default function App() {
       const c = {...updated.children[activeChildIdx]};
       c.monthlyLog = {...c.monthlyLog};
       c.monthlyLog[m] = {...(c.monthlyLog[m]||{})};
+      const savedPts = c.monthlyLog[m][key] || 0;
+      const exp = c.monthlyLog[m][key+'_exp'] || 0;
       delete c.monthlyLog[m][key];
-      c.totalPoints = Math.max(0, (c.totalPoints||0) - pts);
+      delete c.monthlyLog[m][key+'_exp'];
+      c.totalPoints = Math.max(0, (c.totalPoints||0) - savedPts);
+      c.totalExp = Math.max(0, (c.totalExp||0) - exp);
       updated.children = [...updated.children];
       updated.children[activeChildIdx] = c;
       return updated;
@@ -703,18 +713,43 @@ export default function App() {
     if (quest.type === "once") { clearOnceQuest(quest); return; }
     const d = todayStr();
     const key = `${quest.id}_${d}`;
-    if (getTodayClears()[String(quest.id)]) {
-      removeMonthlyLog(key, quest.points);
+    const m = thisMonth();
+    const alreadyDone = String(quest.id) in getTodayClears();
+    setData(prev => {
+      const updated = {...prev};
+      const c = {...updated.children[activeChildIdx]};
+      c.monthlyLog = {...c.monthlyLog};
+      c.monthlyLog[m] = {...(c.monthlyLog[m]||{})};
+      c.monthlyExpLog = {...c.monthlyExpLog};
+      c.monthlyExpLog[m] = {...(c.monthlyExpLog[m]||{})};
+      if (alreadyDone) {
+        const oldPts = c.monthlyLog[m][key] ?? 0;
+        const oldExp = c.monthlyExpLog[m][key] ?? 0;
+        delete c.monthlyLog[m][key];
+        delete c.monthlyExpLog[m][key];
+        c.totalPoints = Math.max(0, (c.totalPoints||0) - oldPts);
+        c.totalExp = Math.max(0, (c.totalExp||0) - oldExp);
+      } else {
+        c.monthlyLog[m][key] = quest.points;
+        c.monthlyExpLog[m][key] = quest.exp ?? quest.points;
+        c.totalPoints = (c.totalPoints||0) + quest.points;
+        c.totalExp = (c.totalExp||0) + (quest.exp ?? quest.points);
+      }
+      updated.children = [...updated.children];
+      updated.children[activeChildIdx] = c;
+      return updated;
+    });
+    if (alreadyDone) {
       showToast(`❌ ${quest.name} を取り消しました`);
     } else {
-      recordMonthlyLog(key, quest.points);
-      showToast(`✅ ${quest.name} +${quest.points}pt！`);
+      showToast(`✅ ${quest.name}！`);
     }
   };
 
   const undoOnceQuest = (quest) => {
     const m = thisMonth();
     if (!getOnceClears()[String(quest.id)]) return;
+    const qExp = quest.exp ?? quest.points;
     setData(prev => {
       const updated = {...prev};
       const c = {...updated.children[activeChildIdx]};
@@ -724,7 +759,11 @@ export default function App() {
       c.monthlyLog = {...c.monthlyLog};
       c.monthlyLog[m] = {...(c.monthlyLog[m]||{})};
       delete c.monthlyLog[m][`${quest.id}_once_${m}`];
+      c.monthlyExpLog = {...c.monthlyExpLog};
+      c.monthlyExpLog[m] = {...(c.monthlyExpLog[m]||{})};
+      delete c.monthlyExpLog[m][`${quest.id}_once_${m}`];
       c.totalPoints = Math.max(0, (c.totalPoints||0) - quest.points);
+      c.totalExp = Math.max(0, (c.totalExp||0) - qExp);
       updated.children = [...updated.children];
       updated.children[activeChildIdx] = c;
       return updated;
@@ -735,6 +774,7 @@ export default function App() {
   const clearOnceQuest = (quest) => {
     const m = thisMonth();
     if (getOnceClears()[String(quest.id)]) return;
+    const qExp = quest.exp ?? quest.points;
     setData(prev => {
       const updated = {...prev};
       const c = {...updated.children[activeChildIdx]};
@@ -742,32 +782,40 @@ export default function App() {
       c.onceClears[m] = {...(c.onceClears[m]||{}), [String(quest.id)]: true};
       c.monthlyLog = {...c.monthlyLog};
       c.monthlyLog[m] = {...(c.monthlyLog[m]||{}), [`${quest.id}_once_${m}`]: quest.points};
+      c.monthlyExpLog = {...c.monthlyExpLog};
+      c.monthlyExpLog[m] = {...(c.monthlyExpLog[m]||{}), [`${quest.id}_once_${m}`]: qExp};
       c.totalPoints = (c.totalPoints||0) + quest.points;
+      c.totalExp = (c.totalExp||0) + qExp;
       updated.children = [...updated.children];
       updated.children[activeChildIdx] = c;
       return updated;
     });
-    showToast(`🌟 ${quest.name} +${quest.points}pt！`);
+    showToast(`🌟 ${quest.name}！`);
   };
 
   const clearPagesQuest = (quest, pages) => {
     if (!pages || pages<=0) return;
     const pts = pages * (quest.pointsPerPage||1);
+    const exp = pages * (quest.expPerPage ?? quest.pointsPerPage ?? 1);
     const key = `${quest.id}_pages_${todayStr()}`;
     const m = thisMonth();
     setData(prev => {
       const updated = {...prev};
       const c = {...updated.children[activeChildIdx]};
       c.monthlyLog = {...c.monthlyLog};
+      c.monthlyExpLog = {...c.monthlyExpLog};
       const oldPts = (c.monthlyLog[m]||{})[key] || 0;
+      const oldExp = (c.monthlyExpLog[m]||{})[key] || 0;
       c.monthlyLog[m] = {...(c.monthlyLog[m]||{}), [key]: pts};
+      c.monthlyExpLog[m] = {...(c.monthlyExpLog[m]||{}), [key]: exp};
       c.totalPoints = (c.totalPoints||0) - oldPts + pts;
+      c.totalExp = (c.totalExp||0) - oldExp + exp;
       updated.children = [...updated.children];
       updated.children[activeChildIdx] = c;
       return updated;
     });
     setPageInputs(p=>({...p,[quest.id]:""}));
-    showToast(`📖 ${quest.name} ${pages}p → ${pts}pt！`);
+    showToast(`📖 ${quest.name} ${pages}p！`);
   };
 
 
@@ -806,8 +854,8 @@ export default function App() {
 
   const addChild = (name, monsterId, pointRate) => {
     const nc = { id:data.nextChildId, name, activeMonster:monsterId||1,
-      monsterExp:{}, totalPoints:0, pointRate:pointRate||10,
-      monthlyLog:{}, onceClears:{} };
+      monsterExp:{}, totalPoints:0, totalExp:0, pointRate:pointRate||10,
+      monthlyLog:{}, monthlyExpLog:{}, onceClears:{} };
     setData(prev=>({...prev, children:[...prev.children,nc], nextChildId:prev.nextChildId+1}));
     setActiveChildIdx(data.children.length);
     setShowAddChild(false);
@@ -969,7 +1017,7 @@ function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs
 function QuestCard({quest,todayClears,onceClears,getTodayPages,pageInput,setPageInput,onClear,onClearPages,onUndoOnce}){
   const isOnce = quest.type==="once";
   const onceDone = isOnce && !!(onceClears||{})[String(quest.id)];
-  const cleared = quest.type==="daily" && !!todayClears[String(quest.id)];
+  const cleared = quest.type==="daily" && (String(quest.id) in todayClears);
   const todayPages = getTodayPages(quest.id);
 
   if (quest.type==="pages") return(
@@ -998,7 +1046,8 @@ function QuestCard({quest,todayClears,onceClears,getTodayPages,pageInput,setPage
         <div style={S.questInfo}>
           <div style={{...S.questName,textDecoration:onceDone?"line-through":"none",opacity:onceDone?0.55:1}}>{quest.name}</div>
           <div style={S.questMeta}>
-            <span style={S.questPts}>+{quest.points}pt</span>
+            <span style={S.questPts}>💰{quest.points}pt</span>
+            {(quest.exp!==undefined?quest.exp:quest.points)>0&&<span style={{...S.questPts,color:"#81d4fa"}}>⚔️{quest.exp!==undefined?quest.exp:quest.points}exp</span>}
             <span style={{fontSize:11,color:"#e57373",fontWeight:700}}>特別</span>
           </div>
         </div>
@@ -1013,7 +1062,10 @@ function QuestCard({quest,todayClears,onceClears,getTodayPages,pageInput,setPage
       <div style={S.questIcon}>{quest.icon}</div>
       <div style={S.questInfo}>
         <div style={{...S.questName,textDecoration:cleared?"line-through":"none",opacity:cleared?0.6:1}}>{quest.name}</div>
-        <div style={S.questMeta}><span style={S.questPts}>+{quest.points}pt</span></div>
+        <div style={S.questMeta}>
+          <span style={S.questPts}>💰{quest.points}pt</span>
+          {(quest.exp!==undefined?quest.exp:quest.points)>0&&<span style={{...S.questPts,color:"#81d4fa"}}>⚔️{quest.exp!==undefined?quest.exp:quest.points}exp</span>}
+        </div>
       </div>
       <div style={{...S.questCheck,...(cleared?S.questCheckDone:{})}}>{cleared?"✓":""}</div>
     </button>
@@ -1199,6 +1251,9 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
   const [icon,setIcon]=useState("⭐");
   const [type,setType]=useState("daily");
   const [ppp,setPpp]=useState("1");
+  const [expVal,setExpVal]=useState("0");
+  const [exppp,setExppp]=useState("0");
+  const [adjustExp,setAdjustExp]=useState("");
   const [editQ,setEditQ]=useState(null);
   const [resetStep,setResetStep]=useState(0);
   const [adjustPt,setAdjustPt]=useState("");
@@ -1219,10 +1274,23 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
     showToast(n>0?`+${n}pt 調整しました`:`${n}pt 調整しました`);
     setAdjustPt("");
   };
+  const doAdjustExp=()=>{
+    const n=Number(adjustExp);
+    if(!child||isNaN(n)||n===0)return;
+    setData(p=>{
+      const u={...p};u.children=[...u.children];
+      u.children[activeChildIdx]={...u.children[activeChildIdx], totalExp: Math.max(0,(u.children[activeChildIdx].totalExp||0)+n)};
+      return u;
+    });
+    showToast(n>0?`経験値+${n} 調整しました`:`経験値${n} 調整しました`);
+    setAdjustExp("");
+  };
   const addQ=()=>{
     if(!name.trim())return;
-    const q={id:data.nextQuestId,name:name.trim(),points:Number(pts),icon:icon||"⭐",category:cat,type,
-      ...(type==="pages"?{pointsPerPage:Number(ppp)||1}:{})};
+    const q={id:data.nextQuestId,name:name.trim(),points:Number(pts),
+      exp: type!=="pages" ? Number(expVal) : undefined,
+      icon:icon||"⭐",category:cat,type,
+      ...(type==="pages"?{pointsPerPage:Number(ppp)||1, expPerPage:Number(exppp)||0}:{})};
     setData(p=>({...p,quests:[...p.quests,q],nextQuestId:p.nextQuestId+1}));
     setName("");showToast("クエストを追加しました！");
   };
@@ -1260,6 +1328,13 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
             <span style={{color:"#ccc",fontSize:13}}>pt</span>
             <button style={{...S.addBtn,marginTop:0,padding:"8px 14px"}} onClick={doAdjustPt}>適用</button>
           </div>
+          <div style={S.settingRow}>
+            <span style={{color:"#ccc",fontSize:13}}>経験値調整</span>
+            <input type="number" value={adjustExp} onChange={e=>setAdjustExp(e.target.value)}
+              placeholder="例: -30" style={{...S.settingInput,width:100}}/>
+            <span style={{color:"#ccc",fontSize:13}}>exp</span>
+            <button style={{...S.addBtn,marginTop:0,padding:"8px 14px"}} onClick={doAdjustExp}>適用</button>
+          </div>
           <p style={{fontSize:11,color:"#888"}}>マイナス値で減算できます</p>
         </div>
       )}
@@ -1275,8 +1350,18 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
         <div style={S.settingRow}>
           <input value={icon} onChange={e=>setIcon(e.target.value)} style={{...S.settingInput,width:52}}/>
           {type==="pages"
-            ?<><input type="number" value={ppp} onChange={e=>setPpp(e.target.value)} style={{...S.settingInput,width:80}}/><span style={{color:"#ccc"}}>pt/p</span></>
-            :<><input type="number" min="0" value={pts} onChange={e=>setPts(e.target.value)} style={{...S.settingInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></>}
+            ?<div style={S.settingRow}>
+              <input type="number" value={ppp} onChange={e=>setPpp(e.target.value)} style={{...S.settingInput,width:70}}/>
+              <span style={{color:"#ccc"}}>pt/p</span>
+              <input value={exppp} onChange={e=>setExppp(e.target.value)} style={{...S.settingInput,width:70}} type="number" min="0"/>
+              <span style={{color:"#ccc"}}>exp/p</span>
+             </div>
+            :<div style={S.settingRow}>
+              <input type="number" min="0" value={pts} onChange={e=>setPts(e.target.value)} style={{...S.settingInput,width:70}}/>
+              <span style={{color:"#ccc"}}>pt</span>
+              <input value={expVal} onChange={e=>setExpVal(e.target.value)} style={{...S.settingInput,width:70}} type="number" min="0"/>
+              <span style={{color:"#ccc"}}>exp</span>
+             </div>}
         </div>
         <button style={S.addBtn} onClick={addQ}>クエストを追加</button>
       </div>
@@ -1532,9 +1617,17 @@ function EditQuestModal({quest,onSave,onClose}){
         <option value="daily">毎日</option><option value="pages">ページ数</option><option value="once">特別</option>
       </select>
     </div>
-    {q.type==="pages"
-      ?<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>1ページ =</span><input type="number" inputMode="numeric" value={q.pointsPerPage||1} min="1" onChange={e=>upd("pointsPerPage",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>
-      :<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>ポイント</span><input type="number" inputMode="numeric" value={q.points} min="0" onChange={e=>upd("points",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>}
+    {q.type==="pages"?(
+      <>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>💰pt/p</span><input type="number" inputMode="numeric" value={q.pointsPerPage||1} min="0" onChange={e=>upd("pointsPerPage",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#81d4fa",fontSize:13}}>⚔️exp/p</span><input type="number" inputMode="numeric" value={q.expPerPage??q.pointsPerPage??1} min="0" onChange={e=>upd("expPerPage",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>exp</span></div>
+      </>
+    ):(
+      <>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>💰ポイント</span><input type="number" inputMode="numeric" value={q.points} min="0" onChange={e=>upd("points",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#81d4fa",fontSize:13}}>⚔️経験値</span><input type="number" inputMode="numeric" value={q.exp??q.points} min="0" onChange={e=>upd("exp",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>exp</span></div>
+      </>
+    )}
   </Modal>);}
 
 function PinModal({onSuccess,onClose}){
