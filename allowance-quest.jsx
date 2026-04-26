@@ -712,6 +712,26 @@ export default function App() {
     }
   };
 
+  const undoOnceQuest = (quest) => {
+    const m = thisMonth();
+    if (!getOnceClears()[String(quest.id)]) return;
+    setData(prev => {
+      const updated = {...prev};
+      const c = {...updated.children[activeChildIdx]};
+      c.onceClears = {...(c.onceClears||{})};
+      c.onceClears[m] = {...(c.onceClears[m]||{})};
+      delete c.onceClears[m][String(quest.id)];
+      c.monthlyLog = {...c.monthlyLog};
+      c.monthlyLog[m] = {...(c.monthlyLog[m]||{})};
+      delete c.monthlyLog[m][`${quest.id}_once_${m}`];
+      c.totalPoints = Math.max(0, (c.totalPoints||0) - quest.points);
+      updated.children = [...updated.children];
+      updated.children[activeChildIdx] = c;
+      return updated;
+    });
+    showToast(`❌ ${quest.name} を取り消しました`);
+  };
+
   const clearOnceQuest = (quest) => {
     const m = thisMonth();
     if (getOnceClears()[String(quest.id)]) return;
@@ -846,6 +866,7 @@ export default function App() {
             todayClears={getTodayClears()} onceClears={getOnceClears()}
             getTodayPages={getTodayPages} pageInputs={pageInputs} setPageInputs={setPageInputs}
             onClear={clearDailyQuest} onClearPages={clearPagesQuest}
+            onUndoOnce={undoOnceQuest}
             onMonthEnd={()=>triggerMonthEnd(thisMonth())}/>
         )}
         {activeTab==="monster" && child && (
@@ -910,7 +931,7 @@ export default function App() {
 // ════════════════════════════════════════════════════════════
 // クエスト画面
 // ════════════════════════════════════════════════════════════
-function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs,setPageInputs,onClear,onClearPages,onMonthEnd}){
+function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs,setPageInputs,onClear,onClearPages,onUndoOnce,onMonthEnd}){
   const cats=[...new Set(quests.map(q=>q.category))];
   return(
     <div style={S.scrollArea} className="scroll-area">
@@ -921,7 +942,8 @@ function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs
             <QuestCard key={q.id} quest={q} todayClears={todayClears} onceClears={onceClears}
               getTodayPages={getTodayPages}
               pageInput={pageInputs[q.id]||""} setPageInput={v=>setPageInputs(p=>({...p,[q.id]:v}))}
-              onClear={()=>onClear(q)} onClearPages={pages=>onClearPages(q,pages)}/>
+              onClear={()=>onClear(q)} onClearPages={pages=>onClearPages(q,pages)}
+              onUndoOnce={()=>onUndoOnce(q)}/>
           ))}
         </div>
       ))}
@@ -932,7 +954,7 @@ function QuestView({quests,child,todayClears,onceClears,getTodayPages,pageInputs
   );
 }
 
-function QuestCard({quest,todayClears,onceClears,getTodayPages,pageInput,setPageInput,onClear,onClearPages}){
+function QuestCard({quest,todayClears,onceClears,getTodayPages,pageInput,setPageInput,onClear,onClearPages,onUndoOnce}){
   const isOnce = quest.type==="once";
   const onceDone = isOnce && !!(onceClears||{})[String(quest.id)];
   const cleared = quest.type==="daily" && !!todayClears[String(quest.id)];
@@ -957,18 +979,21 @@ function QuestCard({quest,todayClears,onceClears,getTodayPages,pageInput,setPage
   );
 
   if (isOnce) return(
-    <button style={{...S.questCard,...(onceDone?S.questCardCleared:{}),cursor:onceDone?"default":"pointer",width:"100%",border:"none"}}
-      onClick={onceDone?undefined:onClear}>
-      <div style={S.questIcon}>{quest.icon}</div>
-      <div style={S.questInfo}>
-        <div style={{...S.questName,textDecoration:onceDone?"line-through":"none",opacity:onceDone?0.55:1}}>{quest.name}</div>
-        <div style={S.questMeta}>
-          <span style={S.questPts}>+{quest.points}pt</span>
-          <span style={{fontSize:11,color:"#e57373",fontWeight:700}}>特別</span>
+    <div style={{...S.questCard,...(onceDone?S.questCardCleared:{}),display:"flex",alignItems:"center"}}>
+      <button style={{flex:1,display:"flex",alignItems:"center",gap:0,background:"none",border:"none",cursor:onceDone?"default":"pointer",padding:0,textAlign:"left"}}
+        onClick={onceDone?undefined:onClear}>
+        <div style={S.questIcon}>{quest.icon}</div>
+        <div style={S.questInfo}>
+          <div style={{...S.questName,textDecoration:onceDone?"line-through":"none",opacity:onceDone?0.55:1}}>{quest.name}</div>
+          <div style={S.questMeta}>
+            <span style={S.questPts}>+{quest.points}pt</span>
+            <span style={{fontSize:11,color:"#e57373",fontWeight:700}}>特別</span>
+          </div>
         </div>
-      </div>
-      <div style={{...S.questCheck,...(onceDone?S.questCheckDone:{})}}>{onceDone?"✓":""}</div>
-    </button>
+        <div style={{...S.questCheck,...(onceDone?S.questCheckDone:{})}}>{onceDone?"✓":""}</div>
+      </button>
+      {onceDone&&<button onClick={onUndoOnce} style={{background:"none",border:"1px solid #555",borderRadius:8,color:"#aaa",fontSize:11,padding:"4px 8px",cursor:"pointer",marginLeft:6,flexShrink:0}}>取り消し</button>}
+    </div>
   );
 
   return(
@@ -1176,7 +1201,7 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
   const updRate=v=>{ if(!child)return; setData(p=>{const u={...p};u.children=[...u.children];u.children[activeChildIdx]={...u.children[activeChildIdx],pointRate:Number(v)};return u;}); };
   const addQ=()=>{
     if(!name.trim())return;
-    const q={id:data.nextQuestId,name:name.trim(),points:Number(pts)||1,icon:icon||"⭐",category:cat,type,
+    const q={id:data.nextQuestId,name:name.trim(),points:Number(pts),icon:icon||"⭐",category:cat,type,
       ...(type==="pages"?{pointsPerPage:Number(ppp)||1}:{})};
     setData(p=>({...p,quests:[...p.quests,q],nextQuestId:p.nextQuestId+1}));
     setName("");showToast("クエストを追加しました！");
@@ -1223,7 +1248,7 @@ function SettingsView({data,setData,parentUnlocked,onUnlock,showToast,activeChil
           <input value={icon} onChange={e=>setIcon(e.target.value)} style={{...S.settingInput,width:52}}/>
           {type==="pages"
             ?<><input type="number" value={ppp} onChange={e=>setPpp(e.target.value)} style={{...S.settingInput,width:80}}/><span style={{color:"#ccc"}}>pt/p</span></>
-            :<><input type="number" value={pts} onChange={e=>setPts(e.target.value)} style={{...S.settingInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></>}
+            :<><input type="number" min="0" value={pts} onChange={e=>setPts(e.target.value)} style={{...S.settingInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></>}
         </div>
         <button style={S.addBtn} onClick={addQ}>クエストを追加</button>
       </div>
@@ -1477,7 +1502,7 @@ function EditQuestModal({quest,onSave,onClose}){
     </div>
     {q.type==="pages"
       ?<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>1ページ =</span><input type="number" inputMode="numeric" value={q.pointsPerPage||1} min="1" onChange={e=>upd("pointsPerPage",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>
-      :<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>ポイント</span><input type="number" inputMode="numeric" value={q.points} min="1" onChange={e=>upd("points",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>}
+      :<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>ポイント</span><input type="number" inputMode="numeric" value={q.points} min="0" onChange={e=>upd("points",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>}
     <button style={S.modalConfirm} onClick={()=>q.name.trim()&&onSave(q)}>保存する</button>
   </Modal>);}
 
