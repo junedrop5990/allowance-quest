@@ -1407,14 +1407,17 @@ function FamilySetupScreen({ onSetup }) {
 // ════════════════════════════════════════════════════════════
 // モーダル群
 // ════════════════════════════════════════════════════════════
-function Modal({children,onClose,title}){return(
+function Modal({children,onClose,title,footer}){return(
   <div style={S.modalOverlay} onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div style={S.modalContent}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
         <h3 style={{fontSize:17,fontWeight:800,color:"#f0f0f0"}}>{title}</h3>
         <button style={S.modalClose} onClick={onClose}>✕</button>
       </div>
-      {children}
+      <div style={{overflowY:"auto",flex:1,display:"flex",flexDirection:"column",gap:10}}>
+        {children}
+      </div>
+      {footer&&<div style={{paddingTop:8,borderTop:"1px solid #2a3660",flexShrink:0}}>{footer}</div>}
     </div>
   </div>
 );}
@@ -1489,7 +1492,8 @@ function EvolutionModal({info,onClose}){
 function EditQuestModal({quest,onSave,onClose}){
   const [q,setQ]=useState({...quest});
   const upd=(k,v)=>setQ(p=>({...p,[k]:v}));
-  return(<Modal onClose={onClose} title="✏️ クエストを編集">
+  return(<Modal onClose={onClose} title="✏️ クエストを編集"
+    footer={<button style={S.modalConfirm} onClick={()=>q.name.trim()&&onSave(q)}>保存する</button>}>
     <div style={{display:"flex",gap:8}}>
       <input value={q.icon} onChange={e=>upd("icon",e.target.value)} style={{...S.modalInput,width:52}}/>
       <input value={q.name} onChange={e=>upd("name",e.target.value)} placeholder="クエスト名" style={S.modalInput}/>
@@ -1503,7 +1507,6 @@ function EditQuestModal({quest,onSave,onClose}){
     {q.type==="pages"
       ?<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>1ページ =</span><input type="number" inputMode="numeric" value={q.pointsPerPage||1} min="1" onChange={e=>upd("pointsPerPage",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>
       :<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{color:"#ccc",fontSize:13}}>ポイント</span><input type="number" inputMode="numeric" value={q.points} min="0" onChange={e=>upd("points",Number(e.target.value))} style={{...S.modalInput,width:80}}/><span style={{color:"#ccc"}}>pt</span></div>}
-    <button style={S.modalConfirm} onClick={()=>q.name.trim()&&onSave(q)}>保存する</button>
   </Modal>);}
 
 function PinModal({onSuccess,onClose}){
@@ -1848,7 +1851,7 @@ const S = {
     background:"#1a1f30",borderRadius:"20px 20px 0 0",
     padding:"20px max(16px,env(safe-area-inset-left))",
     width:"100%",maxWidth:520,
-    maxHeight:"85vh",overflowY:"auto",
+    maxHeight:"80vh",overflowY:"hidden",
     display:"flex",flexDirection:"column",gap:10,
     animation:"popIn 0.25s cubic-bezier(.34,1.56,.64,1)",
   },
